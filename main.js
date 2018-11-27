@@ -1,14 +1,14 @@
 var c,canvas;
-var lines=[];
-var frust=0;
-var light=0;
-var selected_line_index=0;
-var disable_mousemove=false;
-var key_flag1=true;
-var key_flag2=false;
-var switchMode=0;		//Fast/Fancy
-var backColor=0;	//0-255  the gray range
-var stepsResolution=100;
+var lines=[];				// All barriers
+var frust=0;				// Used in tests
+var light=0;				// Used in tests
+var selected_line_index=0;	// Used in tests
+var disable_mousemove=false;// Set by q key : fix the light source	
+var key_flag1=true;			// Set by pressing <a> key -> true=do not hide all barriers
+var key_flag2=false;		// Set by pressing <s> key ->true=show visible segments
+var switchMode=0;			// Fast/Fancy
+var backColor=0;			// Must be between 0-255 -> the background color(red=green=blue ->it's grey)
+var stepsResolution=100;	// In how many steps will the light diminish -higher means smoother
 
 function toDeg(x){return 180*x/Math.PI;}
 function toRad(x){return Math.PI*x/180}
@@ -29,6 +29,16 @@ function translateY(y){
 	//From screen system to internal axis
 	return canvas.height-y;
 }
+
+function toggleTimer(mode){
+	//0 stop Timer-have time to replace loop function; 1 slow Timer; 2 fast Timer;
+	clearInterval(interval); 
+	
+	if(mode==0 || (mode!=1 && mode!=2) ) return;
+	
+	interval=setInterval(loop,(mode==1?1500:150));
+}
+
 function map(nr,in_min, in_max, out_min, out_max) {
   return (nr - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
@@ -37,6 +47,7 @@ function opacityFunction(x){
 	return Math.pow(x,2);
 	//return Math.pow(2,x)-1;
 }
+
 function angleBetween(angle,pair){
 	//Is this angle between the pair{low,high} of angles?
 	if(pair.high>pair.low) return (pair.high>=angle && angle>=pair.low);
@@ -96,14 +107,7 @@ function intersectPairs(pair1,pair2){
 	
 	return 0;
 }
-function toggleTimer(mode){
-	//0 stop Timer-have time to replace loop function; 1 slow Timer; 2 fast Timer;
-	clearInterval(interval); 
-	
-	if(mode==0 || (mode!=1 && mode!=2) ) return;
-	
-	interval=setInterval(loop,(mode==1?1500:150));
-}
+
 
 function fillAdvanced(src,barriers){
 	//The low and high angle..fill in between	
@@ -121,13 +125,10 @@ function fillAdvanced(src,barriers){
 		var red=map( opacityFunction(map(i,0,steps-1,0,1)),0,1,backColor,255  );
 		var blue=map( opacityFunction(map(i,0,steps-1,0,1)),0,1,backColor,224  );
 		
-		c.fillStyle ="rgb("+red+","+red+","+blue+")";//color;
-		c.strokeStyle="rgba("+red+","+red+","+blue+")";//color;
+		c.fillStyle ="rgb("+red+","+red+","+blue+")";
+		c.strokeStyle="rgba("+red+","+red+","+blue+")";
 		c.beginPath();
 		c.moveTo(source.x, source.y);
-		
-		
-		//c.lineTo( source.x+cos(0)*r,source.y-sin(0)*r  );
 		
 		for(var alpha=0;alpha<=360;alpha+=1){
 			var p=new Point(src.x+cos(alpha)*r,src.y+sin(alpha)*r);
@@ -152,9 +153,8 @@ function fillAdvanced(src,barriers){
 				c.lineTo( translateX(closest_point.x),translateY(closest_point.y)  );
 			}
 		}
-		//c.lineTo( source.x+cos(360)*r,source.y-sin(360)*r  );
 		c.closePath();
-		//c.stroke();
+		c.stroke();
 		c.fill();
 	}
 }
@@ -214,25 +214,9 @@ function fillAreaGradient(source,angles,color){
 		}
 		c.lineTo( source.x+cos(angles.high)*r,source.y-sin(angles.high)*r  );
 		c.closePath();
-		//c.stroke();
+		c.stroke();
 		c.fill();
 	}
-	
-	/*
-	c.beginPath();
-	c.moveTo(source.x, source.y);
-	
-	c.lineTo( source.x+cos(angles.low)*amount,source.y-sin(angles.low)*amount  );
-	
-	for(var alpha=0;alpha<=angles.high-angles.low;alpha+=2){
-		c.lineTo( source.x+cos(alpha+angles.low)*amount,source.y-sin(alpha+angles.low)*amount  );
-	}
-	c.lineTo( source.x+cos(angles.high)*amount,source.y-sin(angles.high)*amount  );
-	c.closePath();
-	c.stroke();
-	c.fill();
-	
-	*/
 }
 
 function fillTriangle(src,barrier,color){
@@ -253,86 +237,6 @@ function fillTriangle(src,barrier,color){
 	c.fill();
 	
 }
-function fillTriangleGradient(src,barrier,color){
-	return;	//Failed
-	var source=src.clone();
-	source.x=translateX(source.x);
-	source.y=translateY(source.y);
-	
-	var max_amount=500;
-	var max_steps=stepsResolution;
-	
-	var temp_frust=new Frustum(src,barrier);	//used just for angle
-	var angles={low:temp_frust.s1.angle,high:temp_frust.s2.angle};
-	var angleDirection=1;	//take angles from low to high or viceversa...this depends on which adjacent side is bigger
-	
-	var smallAmount=(src.dist(barrier.p1)<src.dist(barrier.p2)?src.dist(barrier.p1):src.dist(barrier.p2));		//Needed later....
-	var amount=(src.dist(barrier.p1)>src.dist(barrier.p2)?src.dist(barrier.p1):src.dist(barrier.p2));
-	var steps=Math.floor((amount*max_steps)/max_amount);// How many steps are in <amount> considering the unit is <max_amount>/<max_steps> ?
-	
-	console.log(steps);
-	
-	if(angles.low>angles.high) angles.high+=360;
-	if(temp_frust.s1.length<temp_frust.s2.length) {
-		angleDirection=-1;		//The second side is bigger. This means I should color in reverse..from the bigger side to the smallest one
-		angles={low:temp_frust.s2.angle,high:temp_frust.s1.angle};
-	}
-	
-	for(var i=0;i<steps;i++){
-		var r=(steps-i)*(max_amount/max_steps);
-		
-		//step=opacityFunction(map(i,0,steps-1,0,1));
-		
-		var red=map( opacityFunction(map(i,0,steps-1,0,1)),0,1,backColor,255  );
-		var blue=map( opacityFunction(map(i,0,steps-1,0,1)),0,1,backColor,224  );
-		
-		c.fillStyle ="rgb("+red+","+red+","+blue+")";//color;
-		c.strokeStyle="rgba("+red+","+red+","+blue+")";//color;
-		
-		c.beginPath();
-		c.moveTo(source.x, source.y);
-		
-		c.lineTo( source.x+cos(angles.low)*r,source.y-sin(angles.low)*r  );
-		
-		for(var alpha=0;alpha<=Math.abs(angles.high-angles.low);alpha+=10){
-			var p=new Point(src.x+cos(angles.low+angleDirection*alpha)*r,src.y+sin(angles.low+angleDirection*alpha)*r);
-			var dir=new Segment(src,p);
-			if(dir.invalid) continue;		//It happens that we like valid segments
-			var inter=dir.intersect(barrier);
-			if(inter==0){
-				c.lineTo( translateX(p.x),translateY(p.y) );
-			}
-			if(inter instanceof Point) {
-				//c.lineTo( translateX(inter.x),translateY(inter.y) );		//interferes with the last lineTo
-			}
-			
-			
-		}
-		c.lineTo( source.x+cos(angles.high)*smallAmount,source.y-sin(angles.high)*smallAmount  );
-		c.closePath();
-		//c.stroke();
-		c.fill();
-		
-		//if(i==2)break;
-	}
-	
-	
-	
-	/*
-	c.fillStyle =color;
-	c.strokeStyle=color;
-	c.beginPath();
-	c.moveTo(source.x, source.y);
-	
-	c.lineTo( translateX(barrier.p1.x),translateY(barrier.p1.y)  );
-	c.lineTo( translateX(barrier.p2.x),translateY(barrier.p2.y)  );
-	
-	c.closePath();
-	c.fill();
-	c.stroke();
-	*/
-}
-
 
 $(document).ready(function(){
 	canvas=document.getElementById("canvas");
@@ -421,9 +325,9 @@ function loop(){
 	var temp2=[];
 	var visible_lines=[];
 	
-	if(frust!=0 && selected_line_index!=i){
+	if(frust!=0){
 		
-		//Filter lines...if the angle between them and frust source is too small just ignore
+		//Filter segments: if the angle between them and frust source is too small just ignore
 		for(var i=0;i<lines.length;i++){
 			var temp_frust=new Frustum(frust.source,lines[i]);
 			if(temp_frust.angle<1) continue;	//Too small
@@ -475,7 +379,6 @@ function loop(){
 			var temp_frust=new Frustum(frust.source,visible_lines[i]);
 			angles.push({low:temp_frust.s1.angle,high:temp_frust.s2.angle});
 		}
-		
 		angles.sort(function(a,b){
 			if(a.low<b.low) return -1;
 			if(a.low>b.low) return 1;
@@ -554,7 +457,7 @@ function loop(){
 		}
 		angles=temp;
 		
-		//Special case:full circle
+		//Special case:full circle  + Draw routine
 		if(angles.length==1 && aprox(angles[0].low,angles[0].high,0.01)){
 			//Custom draw
 			log("Special case:  circle of light");
