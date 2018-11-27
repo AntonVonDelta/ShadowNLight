@@ -16,6 +16,8 @@ Test it: https://jsfiddle.net/sergiureznicencu/bmn4Ls1k/
   
 # Programming
 The code implements useful classes like Point,Segment,Line,Frustum,Light every class built on previous one. 
+From the code-length point of view everything could have been achieved with far less code. This is possible with the Fancy mode that cuts almost half of the implementation but at cost of processing(not so bad). It draws lines from source to some max-distance from 0 to 360. When doing so it checks for intersections of this "ray" with visible objects(one can even skip the calculation of visible objects and just pass as argument to "fillAdvanced" the lines[] array).
+
 Point class implements routines such as : distance to another point
 
 Segment class:  extend either ends,intersection with other segment(returns 0,point or common/shared segment),contains point. Also provides useful data about the segment such as its angle and whetever it is vertical or not and even its defining function(based on an x it returns a value y).
