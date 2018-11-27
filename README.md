@@ -10,7 +10,7 @@ Fancy mode implements a small gradient generating code. For this mode you can se
 
 There are 3 keyboard modes activated by buttons : q -fixes the light source in place, a - hides all barriers, s - highlight visible segments.
 
-I suggest using the combination of setings: Fancy+normal accuracy+ <s> key set
+I suggest using the combination of setings: Fancy+normal accuracy+<s> key set
   
 # Programming
 The code implements useful classes like Point,Segment,Line,Frustum,Light every class built on previous one. 
