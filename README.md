@@ -20,5 +20,5 @@ Segment class:  extend either ends,intersection with other segment(returns 0,poi
 
 Line class:intersection,inline with another line check
 
-Frustum - composed by a source and an segment. The frustum is between the source and the endpoints of the segment inclosing it in. 
-        - 
+Frustum  composed by a source and an segment. The frustum is between the source and the endpoints of the segment inclosing it in. 
+        
