@@ -12,6 +12,8 @@ There are 3 keyboard modes activated by buttons : q -fixes the light source in p
 
 I suggest using the combination of setings: Fancy+normal accuracy+\<s\> key set
   
+Test it: https://jsfiddle.net/sergiureznicencu/bmn4Ls1k/
+  
 # Programming
 The code implements useful classes like Point,Segment,Line,Frustum,Light every class built on previous one. 
 Point class implements routines such as : distance to another point
