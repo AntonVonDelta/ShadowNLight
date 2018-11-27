@@ -24,4 +24,4 @@ Frustum(not complete) \- composed by a source and an segment(screen). The frustu
         \- the sides extend to a large distance 
         \- checks if a give segment/point is inside, cuts the segmet into piece(outside,inside)
         
-Light - built on Frustum. Adds another layer of intersection: checks if a given segment is between source and screen or cuts in accordingly , retuning only the visible part.
+Light - built on Frustum. Adds another layer of intersection: checks if a given segment is between source and screen or cuts it accordingly , returning only the visible part.
