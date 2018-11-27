@@ -20,5 +20,8 @@ Segment class:  extend either ends,intersection with other segment(returns 0,poi
 
 Line class:intersection,inline with another line check
 
-Frustum  composed by a source and an segment. The frustum is between the source and the endpoints of the segment inclosing it in. 
+Frustum(not complete) \- composed by a source and an segment(screen). The frustum is between the source and the endpoints of the segment inclosing it in. 
+        \- the sides extend to a large distance 
+        \- checks if a give segment/point is inside, cuts the segmet into piece(outside,inside)
         
+Light - built on Frustum. Adds another layer of intersection: checks if a given segment is between source and screen or cuts in accordingly , retuning only the visible part.
